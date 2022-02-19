@@ -40,16 +40,29 @@ void AilaJaadu()
 int n,k,a;
 vector<vector<int>>v;
 vector<int>f;
-vector<pair<int,pair<int,int>>>trns;
+set<pair<int,pair<int,int>>>trns;
 set<pair<int,pair<int,int>>>ftrans;
 vector<vector<int>>dsu_curr;
+vector<vector<int>>adj;
+
+void dfs(int ver, bool vis[])
+{
+    vis[ver] = true;
+    for(auto &i : adj[ver])
+    {
+        if(!vis[i])
+            dfs(i,vis);
+    }
+}
 
 int main()
 {
     AilaJaadu();
     cin >> n >> k >> a;
+    bool vis[n] = {};
     int no_final = -1;
     v.resize(n);
+    adj.resize(n);
     dsu_curr.resize(n);
     bool fs[n] = {};
     for(int i=0; i<n; i++)
@@ -74,16 +87,24 @@ int main()
     {
         int s,d; char c;
         cin >> s >> c >> d;
+        adj[s].push_back(d);
         v[s][c-'a'] = d;
-        trns.push_back({s , {c-'a' , d}});
+        trns.insert({s , {c-'a' , d}});
     }
-
+    dfs(0,vis);
+    for(int i=0 ;i<n; i++)
+        cerr << vis[i] << " ";
+    cerr << "\n";
+    debug(adj);
     for(int i=0; i<n; i++)
     {
         if(fs[i] == false)
         {
-            no_final = i;
-            break;
+            if(vis[i])
+            {
+                no_final = i;
+                break;
+            }
         }
     }
 
@@ -98,8 +119,13 @@ int main()
         for(int i=0; i<n; i++)
         {
             if(!fs[i]){
-                dsu_curr[no_final].push_back(i);
-                parent[i] = no_final;
+                if(vis[i])
+                {
+                    dsu_curr[no_final].push_back(i);
+                    parent[i] = no_final;
+                }
+                else
+                    parent[i] = -1;
             }
         }
     }
@@ -131,7 +157,12 @@ int main()
     while(1)
     {
         for(int i=0; i<n; i++)
-            temp_parent[i] = i;
+        {
+            if(parent[i] != -1)
+                temp_parent[i] = i;
+            else
+                temp_parent[i] = -1;
+        }
         for(int i=0; i<n; i++)
         {
             for(int j=0; j<dsu_curr[i].size(); j++)
@@ -174,7 +205,7 @@ int main()
         }
         for(int i=0; i<n; i++)
         {
-            if(parent[i] != i)
+            if(parent[i] != i && parent[i] != -1)
                 dsu_curr[parent[i]].push_back(i);
         }
         debug(dsu_curr);
@@ -182,13 +213,25 @@ int main()
 
     int ftotal = 0;
     set<int>final_states;
+    set<int>sfn;
+    map<int,int>m;
+    for(int i=0; i<n; i++)
+    {
+        if(parent[i] != -1)
+            sfn.insert(parent[i]);
+    }
+    int cnt = 0;
+    for(auto &i : sfn)
+        m[i] = cnt++;
     for(int i=0; i<n; i++)
         if(!dsu_curr[i].empty())ftotal++;
     for(int i=0; i<f.size(); i++)
-        final_states.insert(parent[f[i]]);
+        final_states.insert(m[parent[f[i]]]);
     for(auto &i : trns)
     {
-        ftrans.insert({parent[i.first],{i.second.first, parent[i.second.second]}});
+        if(!vis[i.first] || !vis[i.second.second])
+            continue;
+        ftrans.insert({m[parent[i.first]],{i.second.first, m[parent[i.second.second]]}});
     }
 
     cout << ftotal << " " << ftrans.size() << " " << final_states.size() << "\n";

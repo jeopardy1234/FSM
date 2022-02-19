@@ -251,11 +251,18 @@ int main()
     }
     if(mch[0].final_state == mch[0].start_state)mch[0].final_state = 0;
     mch[0].start_state = 0;
-
+    sort(mch[0].states.begin(), mch[0].states.end());
+    map<int,int>m;
+    int ctt = 0;
+    for(auto &i : mch[0].states)
+    {
+        m[i] = ctt++;
+        i = 0;
+    }
     cout << sz(mch[0].states) << " " << sz(mch[0].transitions) << " " << 1 << "\n";
-    cout << mch[0].final_state << "\n";
+    cout << m[mch[0].final_state] << "\n";
     for(auto &i : mch[0].transitions)
     {
-        cout << i.first << " " << i.second.second << " " << i.second.first << "\n";
+        cout << m[i.first] << " " << i.second.second << " " << m[i.second.first] << "\n";
     }
 } 
